@@ -25,16 +25,27 @@
 
 Järjestäminen on yksi tunnetuimmista ja tutkituimmista laskennallisista ongelmista. Järjestämisalgoritmit ovat keskeisiä rakennuspalikoita esimerkiksi tietokantajärjestelmissä, hakumoottoreissa sekä tietokonegrafiikassa ja maantieteellistä dataa käsittelevissä järjestelmissä, joissa kohteita on järjestettävä spatiaalisesti. Tästä johtuen tehokkaita järjestämisalgoritmeja tarvitaan kaikilla ohjelmointialustoilla, ja uusien arkkitehtuurien tarjoamia rinnakkaistamismahdollisuuksia on tarpeen käyttää hyödyksi.
 
-Prosessorien ytimien määrä on jo pitkään ollut jatkuvassa kasvussa. Neliytimiset CPU-suorittimet ovat jo nykyään tavallisia, ja tulevaisuudessa kehitys näyttää menevän yhä vahvemmin ns. massiivimoniytimisten prosessorien (\emph{\foreignlanguage{english}{manycore processor}}) suuntaan. Lisäksi ytimet kykenevät usein useamman säikeen suorittamiseen yhtäaikaisesti. Grafiikkayksiköissä massiivinen ytimien määrä on jo saavutettu: esimerkiksi nykyisissä NVIDIAn valmistamissa grafiikkayksiköissä ytimiä on jopa 448 kappaletta (NVIDIA TESLA C2050/C2070/C2075) \cite{nvidiafermi2010}.
+Prosessorien ytimien määrä on jo pitkään ollut jatkuvassa kasvussa. Neliytimiset CPU-suorittimet ovat jo nykyään tavallisia, ja tulevaisuudessa kehitys näyttää menevän yhä vahvemmin ns. massiivimoniytimisten prosessorien (\emph{\foreignlanguage{english}{manycore processor}}) suuntaan. Lisäksi ytimet kykenevät usein useamman säikeen suorittamiseen yhtäaikaisesti. Grafiikkayksiköissä (GPU) massiivinen ytimien määrä on jo saavutettu: esimerkiksi nykyisissä Nvidian valmistamissa grafiikkayksiköissä ytimiä on jopa 448 kappaletta (Nvidia Tesla C2050/C2070/C2075) \cite{nvidiafermi2010}.
 
-Ytimien määrän lisäksi grafiikkayksiköiden ohjelmoinnissa täytyy ottaa huomioon, että ulkoiseen muistiin viittaaminen on hidasta, ja grafiikkapiirillä olevaa nopeaa muistia on rajallinen määrä \cite{leischner2010}.
+Ytimien määrän lisäksi grafiikkayksiköiden ohjelmoinnissa täytyy ottaa huomioon, että ulkoiseen muistiin viittaaminen on hidasta, ja grafiikkapiirillä olevaa nopeaa muistia on rajallinen määrä \cite{leischner2010}. Täten muistissakäynnit on syytä suunnitella siten, että GPU pystyy yhdistämään joukon muistiviittauksia yhdeksi viittaukseksi suurempaan muistialueeseen.
 
 Esittelen seuraavassa luvussa lyhyesti CUDA-ohjelmointiympäristön ja ne grafiikkayksiköiden arkkitehtuuriset ominaisuudet, jotka algoritmien suunnittelussa on otettava huomioon. Sen jälkeen esittelen muutamia erityyppisiä järjestämisalgoritmeja ja niiden toteutuksia CUDA-ympäristössä.
 
 \section{Rinnakkaislaskenta nykyisillä grafiikkayksiköillä}
 
-% Selitä CUDA-arkkitehtuuri lyhyesti
-% Tehokkuuskysymykset
+\subsection{Tesla-näytönohjaimet ja CUDA-arkkitehtuuri}
+
+Edellisen sukupolven Tesla-grafiikkayksiköissä (C1060) oli 30 moniprosessoria (\emph{\foreignlanguage{english}{streaming multiprocessor}}), joista jokainen koostuu kahdeksasta ytimestä (\emph{\foreignlanguage{english}{scalar processor}}). Yhteensä fyysisiä ytimiä oli siis 240. Tesla-grafiikkayksikön täydellinen hyödyntäminen kuitenkin edellyttää vähintään n. 5000--10 000 yhtäaikaisen säikeen käyttöä \cite{leischner2010}. Yksittäisellä moniprosessorilla on mahdollista ajaa yhtäaikaisesti 1024 säiettä \cite{satish2009}.
+
+Yksittäisellä ytimellä on 2048 32 bitin rekisteriä. Yhdellä moniprosessorilla on siis yhteensä noin 64 kilotavua rekisteritilaa. Lisäksi jokaisella moniprosessorilla on jaettu 16 kilotavun muisti, jonka luku- ja kirjoitusoperaatiot ovat nopeita. Viittaukset ulkoiseen muistiin pyritään minimoimaan, koska ne ovat kalliita operaatioita.
+
+Hallitakseen suurta määrää yhtäaikaisia säikeitä moniprosessorit käyttävät ns. SIMT-arkkitehtuuria (\emph{\foreignlanguage{english}{Single Instruction, Multiple Thread}}) \cite{lindholm2008}. Moniprosessorin SIMT-käsky-yksikkö suorittaa säikeet 32 rinnakkaisen säikeen ryhmissä eli ns. loimissa (\emph{\foreignlanguage{english}{warp}}, Lindholmin \cite{lindholm2008} mukaan termi on peräisin matonkudonnasta). Loimen säikeet ovat kaikki samaa tyyppiä, mutta käyttävät eri dataa.
+
+CUDA-ohjelmointiympäristö (\emph{\foreignlanguage{english}{Compute Unified Device Architecture}}) mahdollistaa rinnakkaisten ohjelmien ajamisen näytönohjaimilla. Tyypillisesti (sarjalliset) CUDA-isäntäsovellukset suoritetaan CPU:lla ja rinnakkaiset aliohjelmat (\emph{\foreignlanguage{english}{kernels}}) näytönohjaimella.
+
+CUDA-\emph{\foreignlanguage{english}{kernelit}} ovat sarjallisia sovelluksia, joita suoritetaan useassa säikeessä samanaikaisesti. Nämä säikeet järjestetään säielohkoiksi (\emph{\foreignlanguage{english}{thread block}}) \cite{cudaprogramming}. Analysoitaessa CUDA-ohjelmointiympäristölle suunniteltuja algoritmeja voidaan ajatella käytettävien säielohkojen määrän vastaavan prosessorien määrää perinteisemmässä rinnakkaisalgoritmien analyysissa \cite{satish2009}.
+
+\subsection{Tehokkuus}
 % Mitä yleisiä tekijöitä täytyy ottaa huomioon algoritmien suunnittelussa
 
 \section{Järjestämisalgoritmeja CUDA-ympäristölle}
