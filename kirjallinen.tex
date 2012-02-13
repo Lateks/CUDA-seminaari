@@ -46,12 +46,15 @@ CUDA-ohjelmointiympäristö (\engl{Compute Unified Device Architecture}) \cite{c
 
 CUDA-ytimet ovat sarjallisia sovelluksia, joita suoritetaan useassa säikeessä samanaikaisesti. Nämä säikeet järjestetään säielohkoiksi (\engl{thread block}) \cite{cudaprogramming}. Analysoitaessa CUDA-ohjelmointiympäristölle suunniteltuja algoritmeja voidaan ajatella käytettävien säielohkojen määrän vastaavan prosessorien määrää perinteisemmässä rinnakkaisalgoritmien analyysissa \cite{satish2009}.
 
-\subsection{Tehokkuus}
-% Mitä yleisiä tekijöitä täytyy ottaa huomioon algoritmien suunnittelussa
-% Sample sort -paperista:
-% - conditional branching
-% - shared memory
-% - coalesced global memory operations
+\subsection{Suorituskyvyn tehostaminen}
+
+Jotta näytönohjainten täyttä tehoa pystyttäisiin hyödyntämään, täytyy algoritmien suunnittelussa huomioida joitakin SIMT-arkkitehtuureihin liittyviä erityisominaisuuksia.
+
+Loimeen kuuluvat säikeet suoritetaan siten, että jokainen säie suorittaa samaa käskyä samanaikaisesti, mutta kukin niistä käsittelee eri dataa. Jos kaksi säiettä haarautuu eri suuntiin valintalauseessa, valitut haarat suoritetaan peräkkäin --- ei siis rinnakkain \cite{leischner2010} \cite{cederman2009}. Tämä hidastaa suoritusta, joten täysi teho saavutetaan vain, jos kaikki saman loimen säikeet valitsevat saman suorituspolun. Eri loimien välisillä eroilla sen sijaan ei ole merkitystä suorituskyvyn kannalta \cite{leischner2010} \cite{satish2009}.
+
+Suorituksen aikana data pidetään globaalissa muistissa, mutta siihen viittaaminen on melko hidasta. Kullakin moniprosessorilla on näytönohjainmallista riippuva määrä nopeaa paikallista muistia --- esimerkiksi Tesla C1060-näytönohjaimella 16 kilotavua moniprosessoria kohti. Laskennan aikana kannattaa siis käyttää paikallista jaettua muistia datan väliaikaiseen säilytykseen, koska viittauksia muistiin tulee paljon \cite{cederman2009} \cite{leischner2010}. Laskennan loputtua käsitelty data voidaan kopioida takaisin globaaliin muistiin.
+
+Säikeet voivat periaatteessa viitata mihin tahansa kohtaan muistia, mutta muistiviittaukset kannattaa tehdä siten, että samaan loimeen kuuluvat säikeet viittaavat peräkkäisiin muistiosoitteisiin. Tällöin muistiviitteet voidaan muuntaa yhdeksi suureksi luku- tai kirjoitusoperaatioksi \cite{cederman2009} \cite{satish2009}. Paikallista jaettua muistia käytettäessä säikeiden kannattaa viitata eri muistipaikkoihin, koska muutoin luku- ja kirjoitusoperaatiot joudutaan taas suorittamaan sarjallisesti. Toisaalta jos kaikki säikeet viittaavat samaan muistipaikkaan, tulee muistiviitteestä taas yhtä nopea kuin yksittäisestä lukuoperaatiosta \cite{cederman2009}.
 
 \section{Järjestämisalgoritmeja CUDA-ympäristölle}
 
