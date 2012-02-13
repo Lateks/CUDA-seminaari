@@ -36,7 +36,7 @@ Esittelen seuraavassa luvussa lyhyesti CUDA-ohjelmointiympäristön ja ne grafii
 
 \subsection{Tesla-näytönohjaimet ja CUDA-arkkitehtuuri}
 
-Edellisen sukupolven Tesla-näytönohjaimissa (C1060) oli 30 moniprosessoria (\engl{streaming multiprocessor}), joista jokainen koostuu kahdeksasta ytimestä (\engl{scalar processor}). Yhteensä fyysisiä ytimiä oli siis 240. Uusimman sukupolven Tesla-näytönohjaimissa ytimiä on 448 jaettuna 14 moniprosessorille. Tesla-grafiikkayksikön täydellinen hyödyntäminen kuitenkin edellyttää vähintään n. 5000\thinspace--\thinspace10\thinspace000 yhtäaikaisen säikeen käyttöä \cite{leischner2010}. Yksittäisellä moniprosessorilla on mahdollista ajaa yhtäaikaisesti 1024 säiettä \cite{satish2009}.
+Edellisen sukupolven Tesla-näytönohjaimissa (C1060) oli 30 moniprosessoria (\engl{streaming multiprocessor}), joista jokainen koostuu kahdeksasta ytimestä (\engl{scalar processor}). Yhteensä fyysisiä ytimiä oli siis 240. Uusimman sukupolven Tesla-näytönohjaimissa ytimiä on 448 jaettuna 14 moniprosessorille. Tesla-grafiikkayksikön täydellinen hyödyntäminen kuitenkin edellyttää vähintään n. 5000\thinspace--\thinspace10\thinspace000 yhtäaikaisen säikeen käyttöä \cite{leischner2010}. Yksittäisellä Tesla C1060 -näytönohjaimen moniprosessorilla on mahdollista ajaa yhtäaikaisesti 1024 säiettä \cite{satish2009}.
 
 Jokaisella moniprosessorilla on tietty näytönohjaimen sukupolvesta riippuva määrä rekisteritilaa. Lisäksi jokaisella moniprosessorilla on oma ydinten kesken jaettu muisti, jonka luku- ja kirjoitusoperaatiot ovat nopeita. Viittaukset ulkoiseen muistiin pyritään minimoimaan, koska ne ovat kalliita operaatioita.
 
@@ -62,14 +62,34 @@ Tehokkaimpia tähän mennessä julkaistuja järjestämisalgoritmeja CUDA-ympäri
 
 Myös pikajärjestämisestä (\engl{quicksort}), jota on perinteisesti pidetty yhtenä nopeimmista lajittelualgoritmeista yksiytimisillä prosessoreilla, on tehty joitakin CUDA-toteutuksia (mm. \cite{cederman2009}), mutta toteutukset ovat olleet melko monimutkaisia, eivätkä ole siitä huolimatta aivan pärjänneet esimerkiksi yksinkertaiselle kantalukujärjestämiselle.
 
-\subsection{Lomitusjärjestäminen}
-
-% Satish et al. 2009 & 2010
-
 \subsection{Kantalukujärjestäminen}
+
+Kantalukujärjestäminen on kokonaislukuavainten järjestämiseen tarkoitettu algoritmi, joka perustuu luvun numeroiden järjestämiseen yksitellen vähiten merkitsevästä numerosta\footnote{Huom: Jos siis kantaluku (\engl{radix}) on 10, tarkoitetaan tässä numerolla kokonaislukuja 0\thinspace--\thinspace9. Kantaluku voisi kuitenkin olla esimerkiksi 2, jolloin käsiteltäisiin kokonaislukujen sijaan avaimen bittiesityksen yksittäisiä bittejä.} alkaen. Kun kokonaislukuavainten pituus on vakio $d$, algoritmin aikavaativuus on $O(n)$.
+
+Algoritmi käy avaimet läpi $d$ kertaa. Jokaisella läpikäynnillä avainjoukko järjestetään yksittäisen avaimen numeron perusteella käyttäen jotakin vakaata\footnote{Järjestämisalgoritmi on \emph{vakaa}, jos se säilyttää sellaisten arvojen alkuperäisen järjestyksen, joiden avaimet ovat yhtä suuret. Esimerkiksi parijono $(3, 7)$, $(3, 1)$ voidaan järjestää parin ensimmäisen alkion perusteella kahdella eri tavalla. Vakaan järjestämisalgoritmin tulos olisi $(3, 7)$, $(3, 1)$. Epävakaa järjestämisalgoritmi voisi tuottaa tuloksen $(3, 1)$, $(3, 7)$.} järjestämisalgoritmia, esimerkiksi laskentajärjestämistä \cite{clrs}. Juuri laskentajärjestämisen käyttäminen primitiivinä tekee kantalukujärjestämisestä helposti rinnakkaistuvan, sillä laskentajärjestäminen voidaan esimerkiksi helposti redusoida rinnakkaiseksi prefiksisummaoperaatioksi\footnote{Lukujonon $x_0, x_1, x_2, ..., x_n$ prefiksisumma on lukujono $x_0, x_0 + x_1, x_0 + x_1 + x_2, ..., x_0 + ... + x_n$.} \cite{satish2009}.
+
+Satishin ja kumppanien \cite{satish2009} varhaisemmassa lähestymistavassa kantaluku on $2^b$, missä $b$ valitaan kokeellisesti. Tällöin kokonaislukuavaimen numerot ovat $b$ bitin jonoja. Tarvittavien muistiviitteiden (\engl{scatter}-operaatioiden) määrä pyritään minimoimaan valitsemalla $b > 1$. Data jaetaan 256 säikeen säielohkoihin, joista kukin käsittelee 1024 alkiota. Säielohkoja luodaan siis $p = \lceil n/1024 \rceil$ kappaletta \cite{satish2009}.
+
+Jokaista kokonaislukuavaimen $k$ numeroa kohti lasketaan monessako avaimessa esiintyy samassa kohtaa pienempi numero, ja kuinka monta sellaista avainta, joissa numero on sama, esiintyy aikaisemmin lukujonossa. Näiden kahden lukumäärän summa on avaimen $k$ indeksi eli aste (\engl{rank}) järjestämisen tuloksena saatavassa taulukossa \cite{satish2009}. Tehokkuuden vuoksi tämä tehdään siten, että jokainen säielohko laskee histogrammin sille annetun lukujoukon lukujen esiintymistä, jolloin asteet voidaan helposti laskea prefiksisumman avulla.
+
+Läpikäynnit suoritetaan neljässä vaiheessa:
+\singlespacing
+\begin{enumerate}
+\item Kukin säielohko järjestää sille kuuluvat alkiot paikallisessa nopeassa muistissa. Bitit käsitellään yksitellen siten, että iteraatioita tulee $b$ kappaletta.
+\item Kukin säielohko kirjoittaa numeroiden esiintymähistogrammin ja järjestetyn datan globaaliin muistiin.
+\item Lasketaan sarakkeittaisessa järjestyksessä (\engl{column-major order}) prefiksisumma $p$ kappaleesta histogrammitaulukoita.
+\item Kukin säielohko kopioi alkionsa prefiksisummalla lasketun indeksin osoittamaan muistiosoitteeseen.
+\end{enumerate}
+\onehalfspacing
+
+% Kirjoita vielä b:n valinnasta ja muistinkäyttöön liittyvistä tehokkuusongelmista.
 
 % Satish et al. 2009 & 2010
 % Merrill & Grimshaw 2010
+
+\subsection{Lomitusjärjestäminen}
+
+% Satish et al. 2009 & 2010
 
 \subsection{Laskentajärjestäminen}
 
