@@ -36,13 +36,13 @@ Esittelen seuraavassa luvussa lyhyesti CUDA-ohjelmointiympäristön ja ne grafii
 
 \subsection{Tesla-näytönohjaimet ja CUDA-arkkitehtuuri}
 
-Edellisen sukupolven Tesla-näytönohjaimissa (C1060) oli 30 moniprosessoria (\engl{streaming multiprocessor}), joista jokainen koostuu kahdeksasta ytimestä (\engl{scalar processor}). Yhteensä fyysisiä ytimiä oli siis 240. Uusimman sukupolven Tesla-näytönohjaimissa ytimiä on jo 448. Tesla-grafiikkayksikön täydellinen hyödyntäminen kuitenkin edellyttää vähintään n. 5000--10 000 yhtäaikaisen säikeen käyttöä \cite{leischner2010}. Yksittäisellä moniprosessorilla on mahdollista ajaa yhtäaikaisesti 1024 säiettä \cite{satish2009}.
+Edellisen sukupolven Tesla-näytönohjaimissa (C1060) oli 30 moniprosessoria (\engl{streaming multiprocessor}), joista jokainen koostuu kahdeksasta ytimestä (\engl{scalar processor}). Yhteensä fyysisiä ytimiä oli siis 240. Uusimman sukupolven Tesla-näytönohjaimissa ytimiä on 448 jaettuna 14 moniprosessorille. Tesla-grafiikkayksikön täydellinen hyödyntäminen kuitenkin edellyttää vähintään n. 5000--10 000 yhtäaikaisen säikeen käyttöä \cite{leischner2010}. Yksittäisellä moniprosessorilla on mahdollista ajaa yhtäaikaisesti 1024 säiettä \cite{satish2009}.
 
-Yksittäisellä ytimellä on 2048 32 bitin rekisteriä. Yhdellä moniprosessorilla on siis yhteensä noin 64 kilotavua rekisteritilaa. Lisäksi jokaisella moniprosessorilla on ydinten kesken jaettu 16 kilotavun muisti, jonka luku- ja kirjoitusoperaatiot ovat nopeita. Viittaukset ulkoiseen muistiin pyritään minimoimaan, koska ne ovat kalliita operaatioita.
+Jokaisella moniprosessorilla on tietty näytönohjaimen sukupolvesta riippuva määrä rekisteritilaa. Lisäksi jokaisella moniprosessorilla on oma ydinten kesken jaettu muisti, jonka luku- ja kirjoitusoperaatiot ovat nopeita. Viittaukset ulkoiseen muistiin pyritään minimoimaan, koska ne ovat kalliita operaatioita.
 
 Hallitakseen suurta määrää yhtäaikaisia säikeitä moniprosessorit käyttävät ns. SIMT-arkkitehtuuria (\engl{Single Instruction, Multiple Thread}) \cite{lindholm2008}. Moniprosessorin SIMT-käsky-yksikkö suorittaa säikeet 32 rinnakkaisen säikeen ryhmissä eli ns. loimissa (\engl{warp}, Lindholmin \cite{lindholm2008} mukaan termi on peräisin matonkudonnasta). Loimen säikeet ovat kaikki samaa tyyppiä, mutta käyttävät eri dataa.
 
-CUDA-ohjelmointiympäristö (\engl{Compute Unified Device Architecture}) mahdollistaa rinnakkaisten ohjelmien ajamisen näytönohjaimilla. Tyypillisesti (sarjalliset) CUDA-isäntäsovellukset suoritetaan tavallisella suorittimella ja rinnakkaiset aliohjelmat (CUDA-ytimet, \engl{kernels}) näytönohjaimella.
+CUDA-ohjelmointiympäristö (\engl{Compute Unified Device Architecture}) \cite{cudaprogramming} mahdollistaa rinnakkaisten ohjelmien ajamisen näytönohjaimilla. Tyypillisesti (sarjalliset) CUDA-isäntäsovellukset suoritetaan tavallisella suorittimella ja rinnakkaiset aliohjelmat (CUDA-ytimet, \engl{kernels}) näytönohjaimella.
 
 CUDA-ytimet ovat sarjallisia sovelluksia, joita suoritetaan useassa säikeessä samanaikaisesti. Nämä säikeet järjestetään säielohkoiksi (\engl{thread block}) \cite{cudaprogramming}. Analysoitaessa CUDA-ohjelmointiympäristölle suunniteltuja algoritmeja voidaan ajatella käytettävien säielohkojen määrän vastaavan prosessorien määrää perinteisemmässä rinnakkaisalgoritmien analyysissa \cite{satish2009}.
 
