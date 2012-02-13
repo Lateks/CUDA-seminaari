@@ -24,7 +24,7 @@
 
 \section{Johdanto}
 
-Järjestäminen on yksi tunnetuimmista ja tutkituimmista laskennallisista ongelmista. Järjestämisalgoritmit ovat keskeisiä rakennuspalikoita esimerkiksi tietokantajärjestelmissä, hakumoottoreissa sekä tietokonegrafiikassa ja maantieteellistä dataa käsittelevissä järjestelmissä, joissa kohteita on järjestettävä spatiaalisesti. Tästä johtuen tehokkaita järjestämisalgoritmeja tarvitaan kaikilla ohjelmointialustoilla, ja uusien arkkitehtuurien tarjoamia rinnakkaistamismahdollisuuksia on tarpeen käyttää hyödyksi.
+Järjestäminen on yksi tunnetuimmista ja tutkituimmista laskennallisista ongelmista. Järjestämisalgoritmit ovat keskeisiä rakennuspalikoita esimerkiksi tietokantajärjestelmissä, hakumoottoreissa sekä tietokonegrafiikassa ja maantieteellistä dataa käsittelevissä järjestelmissä, joissa kohteita järjestetetään spatiaalisesti. Tästä johtuen tehokkaita järjestämisalgoritmeja tarvitaan kaikilla ohjelmointialustoilla, ja uusien arkkitehtuurien tarjoamia rinnakkaistamismahdollisuuksia on tarpeen käyttää hyödyksi.
 
 Prosessorien ytimien määrä on jo pitkään ollut jatkuvassa kasvussa. Neliytimiset suorittimet ovat jo nykyään tavallisia, ja tulevaisuudessa kehitys näyttää menevän yhä vahvemmin ns. massiivimoniytimisten prosessorien (\engl{manycore processor}) suuntaan. Lisäksi ytimet kykenevät usein useamman säikeen suorittamiseen yhtäaikaisesti. Grafiikkayksiköissä massiivinen ytimien määrä on jo saavutettu: esimerkiksi nykyisissä Nvidian valmistamissa grafiikkayksiköissä ytimiä on jopa 448 kappaletta (Nvidia Tesla C2050/ C2070/C2075) \cite{nvidiafermi2010}.
 
@@ -36,7 +36,7 @@ Esittelen seuraavassa luvussa lyhyesti CUDA-ohjelmointiympäristön ja ne grafii
 
 \subsection{Tesla-näytönohjaimet ja CUDA-arkkitehtuuri}
 
-Edellisen sukupolven Tesla-näytönohjaimissa (C1060) oli 30 moniprosessoria (\engl{streaming multiprocessor}), joista jokainen koostuu kahdeksasta ytimestä (\engl{scalar processor}). Yhteensä fyysisiä ytimiä oli siis 240. Uusimman sukupolven Tesla-näytönohjaimissa ytimiä on 448 jaettuna 14 moniprosessorille. Tesla-grafiikkayksikön täydellinen hyödyntäminen kuitenkin edellyttää vähintään n. 5000--10 000 yhtäaikaisen säikeen käyttöä \cite{leischner2010}. Yksittäisellä moniprosessorilla on mahdollista ajaa yhtäaikaisesti 1024 säiettä \cite{satish2009}.
+Edellisen sukupolven Tesla-näytönohjaimissa (C1060) oli 30 moniprosessoria (\engl{streaming multiprocessor}), joista jokainen koostuu kahdeksasta ytimestä (\engl{scalar processor}). Yhteensä fyysisiä ytimiä oli siis 240. Uusimman sukupolven Tesla-näytönohjaimissa ytimiä on 448 jaettuna 14 moniprosessorille. Tesla-grafiikkayksikön täydellinen hyödyntäminen kuitenkin edellyttää vähintään n. 5000\thinspace--\thinspace10\thinspace000 yhtäaikaisen säikeen käyttöä \cite{leischner2010}. Yksittäisellä moniprosessorilla on mahdollista ajaa yhtäaikaisesti 1024 säiettä \cite{satish2009}.
 
 Jokaisella moniprosessorilla on tietty näytönohjaimen sukupolvesta riippuva määrä rekisteritilaa. Lisäksi jokaisella moniprosessorilla on oma ydinten kesken jaettu muisti, jonka luku- ja kirjoitusoperaatiot ovat nopeita. Viittaukset ulkoiseen muistiin pyritään minimoimaan, koska ne ovat kalliita operaatioita.
 
@@ -50,23 +50,35 @@ CUDA-ytimet ovat sarjallisia sovelluksia, joita suoritetaan useassa säikeessä 
 
 Jotta näytönohjainten täyttä tehoa pystyttäisiin hyödyntämään, täytyy algoritmien suunnittelussa huomioida joitakin SIMT-arkkitehtuureihin liittyviä erityisominaisuuksia.
 
-Loimeen kuuluvat säikeet suoritetaan siten, että jokainen säie suorittaa samaa käskyä samanaikaisesti, mutta kukin niistä käsittelee eri dataa. Jos kaksi säiettä haarautuu eri suuntiin valintalauseessa, valitut haarat suoritetaan peräkkäin --- ei siis rinnakkain \cite{leischner2010} \cite{cederman2009}. Tämä hidastaa suoritusta, joten täysi teho saavutetaan vain, jos kaikki saman loimen säikeet valitsevat saman suorituspolun. Eri loimien välisillä eroilla sen sijaan ei ole merkitystä suorituskyvyn kannalta \cite{leischner2010} \cite{satish2009}.
+Loimeen kuuluvat säikeet suoritetaan siten, että jokainen säie suorittaa samaa käskyä samanaikaisesti, mutta kukin niistä käsittelee eri dataa (ns. SIMD-käskyt, \engl{Single Instruction, Multiple Data}). Jos kaksi säiettä haarautuu eri suuntiin valintalauseessa, valitut haarat suoritetaan peräkkäin --- ei siis rinnakkain \cite{leischner2010} \cite{cederman2009}. Tämä hidastaa suoritusta, joten täysi teho saavutetaan vain, jos kaikki saman loimen säikeet valitsevat saman suorituspolun. Eri loimien välisillä eroilla sen sijaan ei ole merkitystä suorituskyvyn kannalta \cite{leischner2010} \cite{satish2009}.
 
 Suorituksen aikana data pidetään globaalissa muistissa, mutta siihen viittaaminen on melko hidasta. Kullakin moniprosessorilla on näytönohjainmallista riippuva määrä nopeaa paikallista muistia --- esimerkiksi Tesla C1060-näytönohjaimella 16 kilotavua moniprosessoria kohti. Laskennan aikana kannattaa siis käyttää paikallista jaettua muistia datan väliaikaiseen säilytykseen, koska viittauksia muistiin tulee paljon \cite{cederman2009} \cite{leischner2010}. Laskennan loputtua käsitelty data voidaan kopioida takaisin globaaliin muistiin.
 
 Säikeet voivat periaatteessa viitata mihin tahansa kohtaan muistia, mutta muistiviittaukset kannattaa tehdä siten, että samaan loimeen kuuluvat säikeet viittaavat peräkkäisiin muistiosoitteisiin. Tällöin muistiviitteet voidaan muuntaa yhdeksi suureksi luku- tai kirjoitusoperaatioksi \cite{cederman2009} \cite{satish2009}. Paikallista jaettua muistia käytettäessä säikeiden kannattaa viitata eri muistipaikkoihin, koska muutoin luku- ja kirjoitusoperaatiot joudutaan taas suorittamaan sarjallisesti. Toisaalta jos kaikki säikeet viittaavat samaan muistipaikkaan, tulee muistiviitteestä taas yhtä nopea kuin yksittäisestä lukuoperaatiosta \cite{cederman2009}.
 
-\section{Järjestämisalgoritmeja CUDA-ympäristölle}
+\section{Järjestämisalgoritmit CUDA-ympäristölle}
 
-% Tänne aliluku jokaiselle eri tyyppiselle toteutusratkaisulle
-% Alkuun yleiskatsausluku?
-% - radix sort (Satish et al.)
-% - mergesort (Satish et al)
-% - bitonic sort (Peters ja Hildebrandt)
-% - count sort (Kolonias et al.)
-% - sample sort (Leischner et at.)
-% - quicksort (Cederman & Tsigas) -> tälle ei ehkä omaa lukuaan, turhan monimutkaista?
-% Järjestämisverkot omana alilukunaan?
+Tehokkaimpia tähän mennessä julkaistuja järjestämisalgoritmeja CUDA-ympäristölle näyttävät kirjallisuuden perusteella olevan eri toteutukset lomitusjärjestämisestä (\engl{merge sort}) \cite{satish2009} \cite{satish2010}, kantalukujärjestämisestä (\engl{radix sort}) \cite{satish2009} \cite{merrill2010} \cite{satish2010} ja laskentajärjestämisestä (\engl{counting sort}) \cite{kolonias2011}. Myös järjestämisverkkoihin perustuvat algoritmit kuten Petersin ja Schulz-Hildebrandtin \cite{peters2012gems} esittelemä toteutus bitoniselle järjestämisalgoritmille (\engl{bitonic sort}) näyttävät lupaavalta lähestymistavalta massiivimoniytimisillä prosessoreilla suoritettavaan järjestämiseen.
+
+Myös pikajärjestämisestä (\engl{quicksort}), jota on perinteisesti pidetty yhtenä nopeimmista lajittelualgoritmeista yksiytimisillä prosessoreilla, on tehty joitakin CUDA-toteutuksia (mm. \cite{cederman2009}), mutta toteutukset ovat olleet melko monimutkaisia, eivätkä ole siitä huolimatta aivan pärjänneet esimerkiksi yksinkertaiselle kantalukujärjestämiselle.
+
+\subsection{Lomitusjärjestäminen}
+
+% Satish et al. 2009 & 2010
+
+\subsection{Kantalukujärjestäminen}
+
+% Satish et al. 2009 & 2010
+% Merrill & Grimshaw 2010
+
+\subsection{Laskentajärjestäminen}
+
+% Kolonias et al.
+
+%\subsection{Järjestämisverkot ja bitoninen järjestäminen}
+
+% Käsitellään jos mahtuu
+% Peters ja Hildebrandt
 
 \printbibliography
 
