@@ -78,14 +78,14 @@ Satishin ja kumppanien \cite{satish2009} lähestymistavassa kantaluku on $2^b$, 
 Jokaista kokonaislukuavaimen $k$ numeroa kohti lasketaan, monessako avaimessa esiintyy samassa kohtaa pienempi numero, ja kuinka monta sellaista avainta, joissa numero on sama, esiintyy aikaisemmin lukujonossa. Näiden kahden lukumäärän summa on avaimen $k$ indeksi eli aste (\engl{rank}) järjestämisen tuloksena saatavassa taulukossa \cite{satish2009}. Tehokkuuden vuoksi tämä tehdään siten, että jokainen säielohko laskee histogrammin sille annetun lukujoukon lukujen esiintymistä, jolloin asteet voidaan helposti laskea prefiksisumman avulla.
 
 Läpikäynnit suoritetaan neljässä vaiheessa:
-\singlespacing
+\begin{singlespace*}
 \begin{enumerate}
 \item Kukin säielohko järjestää sille kuuluvat alkiot paikallisessa nopeassa muistissa. Bitit käsitellään yksitellen siten, että iteraatioita tulee $b$ kappaletta.
 \item Kukin säielohko kirjoittaa numeroiden esiintymähistogrammin ja järjestetyn datan globaaliin muistiin.
 \item Lasketaan sarakkeittaisessa järjestyksessä (\engl{column-major order}) prefiksisumma $p$ kappaleesta histogrammitaulukoita. Ks. kuva \ref{fig:columnscan}.
 \item Kukin säielohko kopioi alkionsa prefiksisummalla lasketun indeksin osoittamaan muistiosoitteeseen.
 \end{enumerate}
-\onehalfspacing
+\end{singlespace*}
 
 \begin{figure}
 \centering
@@ -109,7 +109,42 @@ Merrillin ja Grimshawn \cite{merrill2010} \cite{merrill2011} hiukan tuoreempi ja
 
 \subsection{Lomitusjärjestäminen}
 
-% Satish et al. 2009 & 2010
+Satish ja kumppanit \cite{satish2009} ovat esitelleet myös yhden tehokkaimmista lomitusjärjestämisen toteutuksista CUDA-ympäristölle. Algoritmi suoritetaan kolmessa vaiheessa:
+
+\begin{singlespace*}
+\begin{enumerate}
+\item Syötetaulukko jaetaan $p = \lceil n/1024 \rceil$ osaan kuten kantalukujärjestämisessä.
+\item Osiot järjestetään $p$ kappaleessa rinnakkaisia säielohkoja.
+\item Järjestetyt lohkot lomitetaan rinnakkaistetusti käyttäen parittaista $\log(p)$-syvyistä lomituspuuta.
+\end{enumerate}
+\end{singlespace*}
+
+Vaiheessa (2) järjestämiseen käytetään Batcherin järjestämisverkkoihin perustuvaa \engl{odd-even merge sort} -algoritmia, joka on tehokas näytönohjaimilla \cite{kipfer2005gpugems}\footnote{Satishin \cite{satish2009} mukaan käytännön kokeissa 5-10\% tehokkaampi kuin suositumpi, myös järjestämisverkkoihin perustuva bitoninen lajittelu}. Algoritmin ajatus on, että parilliset ja parittomat avaimet järjestetään erillisinä joukkoina ja lopuksi lomitetaan. Satishin ja kumppanien lähestymistavassa parilliset ja parittomat avaimet lajitellaan eri säielohkoissa.
+
+Valtaosa työstä tehdään lomitusvaiheessa. Jokaisella lomituspuun tasolla lomitetaan vaiheen (2) tuottamat järjestetyt lohkot parittomia ja parillisia avaimia keskenään pareittain. Koska lomitettavien parien määrä pienenee geometrisesti jokaisella lomituspuun tasolla, täytyy lomitusalgoritmia tehostaa. Satish ja kumppanit tekevät tämän käyttämällä hajota ja hallitse -tekniikkaa myös lomituspuun eri tasoilla, jolloin rinnakkaisuutta pystytään hyödyntämään myös parien vähentyessä. Lisäksi alkioiden lopullisten sijaintien laskenta tehdään käyttäen rinnakkaisia binäärihakuja \cite{satish2009}.
+
+Jos lomitettavat (järjestetyt) lohkot ovat riittävän pieniä, korkeintaan $t = 256$ alkion kokoisia, voidaan lomitus tehdä yhdellä $t$ säikeen säielohkolla. Lomitettaessa järjestettyjä lohkoja $A$ ja $B$ järjestetyksi lohkoksi $C$ tarvitsee kullekin alkiolle $a_i \in A$ laskea $\mathrm{rank}(a_i, C)$, joka on alkion $a_i$ sijainti lohkossa $C$. Koska $A$ ja $B$ ovat järjestettyjä, tiedetään että $\mathrm{rank}(a_i, C) = i + \mathrm{rank}(a_i, B)$, missä $\mathrm{rank}(a_i, B)$ on niiden alkioiden $b_j \in B$ määrä, jotka ovat pienempiä kuin $a_i$. Vastaavasti voidaan laskea kaikkien $B$:n alkioiden sijainnit lomitetussa taulukossa.
+
+Edellä kuvattu laskenta voidaan toteuttaa binäärihaulla. Tällöin jokainen säielohkon säie voi laskea sen vastuulla olevien alkioiden sijainnit lomitetussa taulukossa ja kirjoittaa alkiot oikeille paikoilleen muistissa \cite{satish2009}.
+
+Jos lomitettavien taulukoiden koko on suurempi kuin $t$, ne jaetaan korkeintaan $t$ alkion lohkoihin, jotka voidaan lomittaa rinnakkain edellä kuvatulla tavalla. Jakaminen toteutetaan seuraavalla tavalla:
+
+\begin{singlespace*}
+\begin{enumerate}
+\item Taulukoille $A$ ja $B$ rakennetaan jakajataulukot $S_A$ ja $S_B$ valitsemalla molemmista taulukoista $t$. alkio. Siis esimerkiksi $S_A = [a_t, a_{2t}, a_{3t}, ...]$.
+\item Jakajataulukot $S_A$ ja $S_B$ lomitetaan taulukoksi $S = \mathrm{merge}(S_A, S_B)$.
+\item $A$ ja $B$ jaetaan molemmat korkeintaan $t$ alkion pituisiksi taulukoiksi jakajataulukon $S$ avulla. Tämä toteutetaan laskemalla jokaiselle jakaja-alkiolle $s \in S$ $\mathrm{rank}(s, A)$ ja $\mathrm{rank}(s, B)$. Tämän jälkeen jakaja-alkioiden rajaamat osiot taulukoista $A$ ja $B$ voidaan lomittaa pareittain edellä kuvatulla tavalla käyttäen yhtä säielohkoa paria kohti.
+\end{enumerate}
+\end{singlespace*}
+
+Toisin kuin kantalukujärjestämisessä, lomitusjärjestämisen nopeus ei muutu ratkaisevasti avainten koon mukaan (kuva \ref{fig:merge_sort_varying_key_size}). Toisaalta algoritmi on kertaluokkaa kantalukujärjestämista hitaampi. Parhaimmillaan algoritmi luokittelee noin 60 miljoonaa avain-arvo-paria sekunnissa. Vertailuihin perustuvana järjestämisalgoritmina lomitusjärjestäminen on kuitenkin kantalukujärjestämistä yleiskäyttöisempi \cite{clrs}.
+
+\begin{figure}
+\centering
+\includegraphics[scale = 0.45]{satish_mergesort}
+\caption{Lomitusjärjestämisen järjestämien parien määrä sekunnissa eri pituisilla avaimilla Nvidian GeForce GTX 280 -näytönohjaimella (kuvan lähde \cite{satish2009}).}
+\label{fig:merge_sort_varying_key_size}
+\end{figure}
 
 \subsection{Laskentajärjestäminen}
 
