@@ -94,6 +94,22 @@ Läpikäynnit suoritetaan neljässä vaiheessa:
 
 Kantaluvussa esiintyvän vakion $b$ valintaan vaikuttaa kaksi tekijää \cite{satish2009}. Toisaalta suuremmat $b$:n arvot heikentävät kohdassa (4) tapahtuvien \engl{scatter}-o\-pe\-raa\-ti\-oi\-den yhtenäisyyttä, koska mahdollisten numeroiden joukko on suurempi. Toisaalta jos $b$:n arvo on pienempi, joudutaan läpikäyntejä tekemään enemmän, jolloin jokaisen läpikäynnin lopussa suoritetaan uusi \engl{scatter}-operaatio muistiin. Molemmat ovat hidastavia tekijöitä. Kantaluvuksi $2^b$ valitaan empiirisen optimoinnin tuloksena $2^b = 16 = \sqrt{t}$, missä $b = 4$ ja $t = 256$ on säikeiden määrä yhdessä säielohkossa.
 
+Kantalukujärjestämisen nopeus riippuu vahvasti avainten pituudesta, koska avainten ollessa lyhyempiä tarvitaan läpikäyntejä vähemmän (ks. kuva \ref{fig:radix_sort_varying_key_size}). Algoritmi kykenee järjestämään 8-bittisiä avaimia jopa yli 500 miljoonaa paria sekunnissa. 32-bittisten avaimien lajittelunopeus taas on korkeimmillaan lähellä 150 miljoonaa. Datan esijärjestämisellä ei ole oleellista merkitystä algoritmin nopeuden kannalta (ks. kuva \ref{fig:radix_sort_pre_sorted_data}).
+
+\begin{figure}
+\centering
+\includegraphics[scale = 0.4]{radix_sort_varying_key_size}
+\caption{Kantalukujärjestämisen järjestämien parien määrä sekunnissa eri pituisilla avaimilla (kuvan lähde \cite{satish2009}).}
+\label{fig:radix_sort_varying_key_size}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale = 0.4]{radix_sort_pre_sorted_data}
+\caption{Kantalukujärjestämisen järjestämien parien määrä sekunnissa esijärjestetyllä datalla (kuvan lähde \cite{satish2009}).}
+\label{fig:radix_sort_pre_sorted_data}
+\end{figure}
+
 % Satish et al. 2009 & 2010
 % Merrill & Grimshaw 2010
 
