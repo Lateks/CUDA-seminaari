@@ -61,9 +61,11 @@ Säikeet voivat periaatteessa viitata mihin tahansa kohtaan muistia, mutta muist
 
 \section{Järjestämisalgoritmit CUDA-ympäristölle}
 
-Tehokkaimpia tähän mennessä julkaistuja järjestämisalgoritmeja CUDA-ym\-pä\-ris\-töl\-le näyttävät kirjallisuuden perusteella olevan eri toteutukset lomitusjärjestämisestä (\engl{merge sort}) \cite{satish2009} \cite{satish2010}, kantalukujärjestämisestä (\engl{radix sort}) \cite{satish2009} \cite{merrill2010} \cite{satish2010} ja laskentajärjestämisestä (\engl{counting sort}) \cite{kolonias2011}. Myös järjestämisverkkoihin perustuvat algoritmit kuten Petersin ja Schulz-Hildebrandtin \cite{peters2012gems} esittelemä toteutus bitoniselle järjestämisalgoritmille (\engl{bitonic sort}) näyttävät lupaavalta lähestymistavalta massiivimoniytimisillä prosessoreilla suoritettavaan järjestämiseen.
+Tehokkaimpia tähän mennessä julkaistuja järjestämisalgoritmeja CUDA-ym\-pä\-ris\-töl\-le näyttävät kirjallisuuden perusteella olevan eri toteutukset lomitusjärjestämisestä (\engl{merge sort}) \cite{satish2009} \cite{satish2010}, kantalukujärjestämisestä (\engl{radix sort}) \cite{satish2009} \cite{merrill2011} ja laskentajärjestämisestä (\engl{counting sort}) \cite{kolonias2011}. Esimerkiksi Nvidian CUDA SDK:n ja CUDA Data-Parallel Primitives -kirjaston (CUDPP) \cite{cudpp} kantalukujärjestämisalgoritmit perustuvat Satishin ja kumppanien esitykseen \cite{satish2009}. Myös järjestämisverkkoihin perustuvat algoritmit kuten Petersin ja Schulz-Hildebrandtin \cite{peters2012gems} esittelemä toteutus bitoniselle järjestämisalgoritmille (\engl{bitonic sort}) näyttävät lupaavalta lähestymistavalta massiivimoniytimisillä prosessoreilla suoritettavaan järjestämiseen.
 
 Myös pikajärjestämisestä (\engl{quicksort}), jota on perinteisesti pidetty yhtenä nopeimmista lajittelualgoritmeista yksiytimisillä prosessoreilla, on tehty joitakin toteutuksia CUDAlle (mm. \cite{cederman2009}), mutta toteutukset ovat olleet melko monimutkaisia, eivätkä ole siitä huolimatta aivan pärjänneet esimerkiksi yksinkertaiselle kantalukujärjestämiselle.
+
+Lähestymistapa järjestämisalgoritmien suunnitteluun massiivimoniytimisillä prosessoreilla poikkeaa tavallisista moniydinprosessoreista siinä, että moniydinprosessoreilla tyypillisesti keskitytään eri toimintojen suorittamiseen rinnakkain, kun taas massiivimoniydinprosessoreilla suoritetaan samoja toimintoja rinnakkain eri datalle \cite{satish2009}.
 
 \subsection{Kantalukujärjestäminen}
 
@@ -71,9 +73,9 @@ Kantalukujärjestäminen on kokonaislukuavainten järjestämiseen tarkoitettu al
 
 Algoritmi käy avaimet läpi $d$ kertaa. Jokaisella läpikäynnillä avainjoukko järjestetään yksittäisen avaimen numeron perusteella käyttäen jotakin vakaata\footnote{Järjestämisalgoritmi on \emph{vakaa}, jos se säilyttää sellaisten arvojen alkuperäisen järjestyksen, joiden avaimet ovat yhtä suuret. Esimerkiksi parijono $(3, 7)$, $(3, 1)$ voidaan järjestää parin ensimmäisen alkion perusteella kahdella eri tavalla. Vakaan järjestämisalgoritmin tulos olisi $(3, 7)$, $(3, 1)$. Epävakaa järjestämisalgoritmi voisi tuottaa tuloksen $(3, 1)$, $(3, 7)$.} järjestämisalgoritmia, esimerkiksi laskentajärjestämistä \cite{clrs}. Juuri laskentajärjestämisen käyttäminen primitiivinä tekee kantalukujärjestämisestä helposti rinnakkaistuvan, sillä laskentajärjestäminen voidaan esimerkiksi helposti redusoida rinnakkaiseksi prefiksisummaoperaatioksi\footnote{Lukujonon $x_0, x_1, x_2, ..., x_n$ prefiksisumma on lukujono $x_0, x_0 + x_1, x_0 + x_1 + x_2, ..., x_0 + ... + x_n$.} \cite{satish2009}.
 
-Satishin ja kumppanien \cite{satish2009} varhaisemmassa lähestymistavassa kantaluku on $2^b$, missä $b$ valitaan kokeellisesti. Tällöin kokonaislukuavaimen numerot ovat $b$ bitin jonoja. Tarvittavien muistiviitteiden (\engl{scatter}-operaatioiden) määrä pyritään minimoimaan valitsemalla $b > 1$. Data jaetaan 256 säikeen säielohkoihin, joista kukin käsittelee 1024 alkiota --- siis 4 alkiota säiettä kohti. Säielohkoja luodaan siis $p = \lceil n/1024 \rceil$ kappaletta \cite{satish2009}.
+Satishin ja kumppanien \cite{satish2009} lähestymistavassa kantaluku on $2^b$, missä $b$ valitaan kokeellisesti. Tällöin kokonaislukuavaimen numerot ovat $b$ bitin jonoja. Tarvittavien muistiviitteiden (\engl{scatter}-operaatioiden) määrä pyritään minimoimaan valitsemalla $b > 1$. Data jaetaan 256 säikeen säielohkoihin, joista kukin käsittelee 1024 alkiota --- siis 4 alkiota säiettä kohti. Säielohkoja luodaan siis $p = \lceil n/1024 \rceil$ kappaletta \cite{satish2009}.
 
-Jokaista kokonaislukuavaimen $k$ numeroa kohti lasketaan monessako avaimessa esiintyy samassa kohtaa pienempi numero, ja kuinka monta sellaista avainta, joissa numero on sama, esiintyy aikaisemmin lukujonossa. Näiden kahden lukumäärän summa on avaimen $k$ indeksi eli aste (\engl{rank}) järjestämisen tuloksena saatavassa taulukossa \cite{satish2009}. Tehokkuuden vuoksi tämä tehdään siten, että jokainen säielohko laskee histogrammin sille annetun lukujoukon lukujen esiintymistä, jolloin asteet voidaan helposti laskea prefiksisumman avulla.
+Jokaista kokonaislukuavaimen $k$ numeroa kohti lasketaan, monessako avaimessa esiintyy samassa kohtaa pienempi numero, ja kuinka monta sellaista avainta, joissa numero on sama, esiintyy aikaisemmin lukujonossa. Näiden kahden lukumäärän summa on avaimen $k$ indeksi eli aste (\engl{rank}) järjestämisen tuloksena saatavassa taulukossa \cite{satish2009}. Tehokkuuden vuoksi tämä tehdään siten, että jokainen säielohko laskee histogrammin sille annetun lukujoukon lukujen esiintymistä, jolloin asteet voidaan helposti laskea prefiksisumman avulla.
 
 Läpikäynnit suoritetaan neljässä vaiheessa:
 \singlespacing
@@ -94,24 +96,16 @@ Läpikäynnit suoritetaan neljässä vaiheessa:
 
 Kantaluvussa esiintyvän vakion $b$ valintaan vaikuttaa kaksi tekijää \cite{satish2009}. Toisaalta suuremmat $b$:n arvot heikentävät kohdassa (4) tapahtuvien \engl{scatter}-o\-pe\-raa\-ti\-oi\-den yhtenäisyyttä, koska mahdollisten numeroiden joukko on suurempi. Toisaalta jos $b$:n arvo on pienempi, joudutaan läpikäyntejä tekemään enemmän, jolloin jokaisen läpikäynnin lopussa suoritetaan uusi \engl{scatter}-operaatio muistiin. Molemmat ovat hidastavia tekijöitä. Kantaluvuksi $2^b$ valitaan empiirisen optimoinnin tuloksena $2^b = 16 = \sqrt{t}$, missä $b = 4$ ja $t = 256$ on säikeiden määrä yhdessä säielohkossa.
 
-Kantalukujärjestämisen nopeus riippuu vahvasti avainten pituudesta, koska avainten ollessa lyhyempiä tarvitaan läpikäyntejä vähemmän (ks. kuva \ref{fig:radix_sort_varying_key_size}). Algoritmi kykenee järjestämään 8-bittisiä avaimia jopa yli 500 miljoonaa paria sekunnissa. 32-bittisten avaimien lajittelunopeus taas on korkeimmillaan lähellä 150 miljoonaa. Datan esijärjestämisellä ei ole oleellista merkitystä algoritmin nopeuden kannalta (ks. kuva \ref{fig:radix_sort_pre_sorted_data}).
+Kantalukujärjestämisen nopeus riippuu vahvasti avainten pituudesta, koska avainten ollessa lyhyempiä tarvitaan läpikäyntejä vähemmän (ks. kuva \ref{fig:radix_sort_varying_key_size}). Algoritmi kykenee järjestämään 8-bittisiä avaimia jopa yli 500 miljoonaa paria sekunnissa. 32-bittisten avaimien lajittelunopeus taas on korkeimmillaan lähellä 150 miljoonaa. Datan esijärjestämisellä ei ole oleellista merkitystä algoritmin nopeuden kannalta \cite{satish2009}.
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.4]{radix_sort_varying_key_size}
-\caption{Kantalukujärjestämisen järjestämien parien määrä sekunnissa eri pituisilla avaimilla (kuvan lähde \cite{satish2009}).}
+\includegraphics[scale = 0.45]{radix_sort_varying_key_size}
+\caption{Kantalukujärjestämisen järjestämien parien määrä sekunnissa eri pituisilla avaimilla Nvidian GeForce GTX 280 -näytönohjaimella (kuvan lähde \cite{satish2009}).}
 \label{fig:radix_sort_varying_key_size}
 \end{figure}
 
-\begin{figure}
-\centering
-\includegraphics[scale = 0.4]{radix_sort_pre_sorted_data}
-\caption{Kantalukujärjestämisen järjestämien parien määrä sekunnissa esijärjestetyllä datalla (kuvan lähde \cite{satish2009}).}
-\label{fig:radix_sort_pre_sorted_data}
-\end{figure}
-
-% Satish et al. 2009 & 2010
-% Merrill & Grimshaw 2010
+Merrillin ja Grimshawn \cite{merrill2010} \cite{merrill2011} hiukan tuoreempi ja optimoidumpi kantalukujärjestämistoteutus suoriutuu lajittelusta huomattavasti nopeammin pitemmilläkin avaimilla. Nvidian GT200-sarjan näytönohjaimilla algoritmin sanotaan kykenevän lajittelemaan 482 miljoonaa 32-bittistä avain-arvo-paria tai 500 miljoonaa 32-bittistä avainta sekunnissa \cite{merrill2010}. Yleisesti toteutus on näytönohjaimesta riippuen noin kahdesta kolmeen kertaa CUDPP:n Satishin ja kumppanien esittelemään malliin pohjautuvaa algoritmia nopeampi \cite{merrill2011}. Tämä toteutus on todennäköisesti nopein tähän mennessä esitellyistä GPU-lajittelualgoritmeista.
 
 \subsection{Lomitusjärjestäminen}
 
