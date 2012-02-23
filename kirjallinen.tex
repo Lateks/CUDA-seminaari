@@ -244,8 +244,14 @@ Yleisesti $n = 2^k$ alkion pituisen syötteen bitoninen järjestämisverkko koos
 
 Kiinnostus järjestämisverkkoihin perustuvia algoritmeja kohtaan on kasvanut viime aikoina, koska ne on erityisesti suunnattu rinnakkaisia arkkitehtuureja varten. Rinnakkaistamisessa täytyy ottaa huomioon, että kun jokin vertailuoperaatio askeleessa $s$ alkaa käsitellä jotakin alkioparia, täytyy molempiin alkioihin kohdistuvien vertailuoperaatioiden olla suoritettu loppuun edellisessä askeleessa $s - 1$. Tämän vuoksi rinnakkainen toteutus vaatii tyypillisesti paljon rinnakkaisten prosessointiyksiköiden välistä synkronointia ja kommunikointia.
 
-Peters ja Schultz-Hildebrandt \cite{peters2012gems} esittelevät GPU Computing Gems -kirjassa CUDA-toteutuksen bitoniselle järjestämiselle. Koska mielivaltaisten säikeiden synkronointi ei ole mahdollista CUDAssa, toiminnot pyritään suorittamaan oikeassa järjestyksessä siten, että synkronointia vaativat toiminnot sijoitetaan eri CUDA-ytimiin, jotka suoritetaan peräkkäin. Kommunikaatio peräkkäin suoritettavien CUDA-ytimien välillä toteutetaan käyttämällä näytönohjaimen globaalia muistia tiedonvälitykseen. Petersin ja Schultz-Hildebrandtin toteutus pyrkii lisäksi minimoimaan kommunikaation ja synkronoinnin tarpeen tarvittavien CUDA-ytimien ja globaaliin muistiin tehtävien viitteiden vähentämiseksi.
+Peters ja Schultz-Hildebrandt \cite{peters2012gems} esittelevät GPU Computing Gems -kirjassa CUDA-toteutuksen bitoniselle järjestämiselle. Koska mielivaltaisten säikeiden synkronointi ei ole mahdollista CUDAssa, toiminnot pyritään suorittamaan oikeassa järjestyksessä siten, että synkronointia vaativat toiminnot sijoitetaan eri CUDA-ytimiin, jotka suoritetaan peräkkäin. Kommunikaatio peräkkäin suoritettavien CUDA-ytimien välillä toteutetaan käyttämällä näytönohjaimen globaalia muistia tiedonvälitykseen. Petersin ja Schultz-Hildebrandtin toteutus pyrkii minimoimaan kommunikaation ja synkronoinnin tarpeen tarvittavien CUDA-ytimien ja globaaliin muistiin tehtävien viitteiden vähentämiseksi.
 
+\begin{figure}
+\centering
+\includegraphics[scale = 0.8]{bitonic_divided}
+\caption{Yksinkertainen ratkaisu (vasemmalla) ja edistyneempi ratkaisu (oikealla).}
+\label{fig:bitonic_divided}
+\end{figure}
 
 \section{Yhteenveto}
 
