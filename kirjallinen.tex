@@ -151,7 +151,7 @@ Toisin kuin kantalukujärjestämisessä, lomitusjärjestämisen nopeus ei muutu 
 
 \subsection{Järjestämisverkot ja bitoninen järjestäminen}
 
-Bitoninen järjestäminen (\engl{bitonic sort}) on Kevin Batcherin vuonna 1967 kehittämä järjestämisalgoritmi, joka perustuu järjestämisverkkoihin. Järjestämisverkko on abstrakti matemaattinen malli, joka muodostuu syötelangoista ja niitä yhdistävistä vertailumoduuleista. Järjestettävät syötteet ''liikkuvat'' syötelankoja pitkin vasemmalta oikealle. Kun syöteluvut pääsevät vertailumoduulin kohdalle, se vertaa lukuja toisiinsa ja tarvittaessa vaihtaa niiden paikkoja. Järjestämisverkon tekemien vertailuoperaatioiden määrä riippuu ainoastaan syötteen pituudesta, ei sisällöstä.
+Bitoninen järjestäminen (\engl{bitonic sort}) on Kevin Batcherin vuonna 1967 kehittämä järjestämisalgoritmi, joka perustuu järjestämisverkkoihin. Järjestämisverkko on abstrakti matemaattinen malli, joka muodostuu syötelangoista ja niitä yhdistävistä vertailumoduuleista. Järjestettävät syötteet ''liikkuvat'' syötelankoja pitkin vasemmalta oikealle. Kun syöteluvut pääsevät vertailumoduulin kohdalle, se vertaa lukuja toisiinsa ja tarvittaessa vaihtaa niiden paikkoja. Järjestämisverkon tekemien vertailuoperaatioiden määrä riippuu ainoastaan syötteen pituudesta, ei esimerkiksi alkioiden jakaumasta.
 
 %\begin{figure}
 %\centering
@@ -194,9 +194,18 @@ Edistyneempi ratkaisu on kuvattu kuvassa \ref{fig:bitonic_divided} oikealla. Kol
 
 Pitempiä syötteitä käsiteltäessä voidaan ketjuttaa useampiakin askelia saman säikeen suoritettaviksi. Saman säikeen käsiteltäviksi annettavien askelten määrää rajoittaa kuitenkin säikeiden paikallisten rekisterien rajallinen määrä ja se, että näytönohjaimen tehokas hyödyntäminen edellyttää suurta määrää samanaikaisesti ajettavia säikeitä, joten säikeiden määrän ei haluta pienenevän merkittävästi \cite{peters2012gems}.
 
-Rekisterien rajallisuus ei olisi ongelma, jos yksittäisten säikeiden sijaan käytettäisiin säielohkoja, jolloin säikeet voisivat käyttää paikallista jaettua muistia, joka on huomattavasti suurempi kuin säikeiden paikallinen rekisteritila. Tällöin kuitenkin ongelmaksi nousee se, että saman säielohkon käsiteltäviksi tulevat alkiot sijaitsevat harvoin peräkkäin muistissa, joten muistiin tehtävien viitteiden yhdistäminen ei ole mahdollista, mikä taas hidastaa suoritusta.
+Rekisterien rajallisuus ei olisi ongelma, jos yksittäisten säikeiden sijaan käytettäisiin säielohkoja, jolloin säikeet voisivat käyttää paikallista jaettua muistia, joka on huomattavasti suurempi kuin säikeiden paikallinen rekisteritila. Tällöin kuitenkin ongelmaksi nousee se, että saman säielohkon käsiteltäviksi tulevat alkiot sijaitsevat harvoin peräkkäin muistissa, joten muistiin tehtävien viitteiden yhdistäminen ei ole mahdollista, mikä taas hidastaa suoritusta \cite{peters2012gems}.
 
-Jaettua muistia ja säielohkoja kuitenkin pystytään käyttämään hyödyksi toisella tavalla. Kun syötteenä saatavan avainjonon koko on $2^k$, kunkin vaiheen askeleissa $s, s-1, ..., 1$ käsitellään itsenäisesti $2^{k-s}$ kappaletta $2^s$ alkion alijonoja, jotka sijaitsevat peräkkäin muistissa. Jos tällainen $2^s$ alkion alijono mahtuu kokonaan säielohkon jaettuun muistiin, se voidaan siirtää globaalista muistista jaettuun muistiin yhdellä yhdistetyllä lukuoperaatiolla ja jakaa säielohkon sisällä vertailuoperaatiot säikeiden kesken edellä kuvatulla tavalla, mutta käyttäen rekisterien sijaan säielohkon jaettua paikallista muistia ja useiden CUDA-ytimien käynnistämisen sijaan lohkojen sisäistä synkronointia.
+Jaettua muistia ja säielohkoja kuitenkin pystytään käyttämään hyödyksi toisella tavalla. Kun syötteenä saatavan avainjonon koko on $2^k$, kunkin vaiheen askeleissa $s, s-1, ..., 1$ käsitellään itsenäisesti $2^{k-s}$ kappaletta $2^s$ alkion alijonoja, jotka sijaitsevat peräkkäin muistissa. Jos tällainen $2^s$ alkion alijono mahtuu kokonaan säielohkon jaettuun muistiin, se voidaan siirtää globaalista muistista jaettuun muistiin yhdellä yhdistetyllä lukuoperaatiolla ja jakaa säielohkon sisällä vertailuoperaatiot säikeiden kesken edellä kuvatulla tavalla, mutta käyttäen rekisterien sijaan säielohkon jaettua paikallista muistia ja useiden CUDA-ytimien käynnistämisen sijaan lohkojen sisäistä synkronointia \cite{peters2012gems}.
+
+\begin{figure}
+\centering
+\includegraphics[scale = 1.0]{bitonic_32bit}
+\caption{Bitoninen järjestäminen 32-bittisillä avaimilla. Vertailukohteina mm. Satishin ja kumppanien \cite{satish2009} kantalukujärjestäminen (Thrust radix sort), Merrillin ja Grimshawn kantalukujärjestäminen \cite{merrill2011} (STRS radix sort) ja pikajärjestäminen \cite{cederman2009} (GPU quick sort). (Kuvan lähde \cite{peters2012gems}.)}
+\label{fig:bitonic_32bit}
+\end{figure}
+
+Vertailuissa sekä 32- että 64-bittisillä avaimilla avaimilla Petersin ja Schulz-Hildebrandtin toteutus voittaa nopeudessa useimmat tunnetuista nopeista CUDA-järjestämisalgoritmitoteutuksista (ks. vertailu 32-bittisillä avaimilla kuvassa \ref{fig:bitonic_32bit}). Se häviää ainoastaan Merrillin ja Grimshawn \cite{merrill2011} kantalukujärjestämiselle. Bitoninen järjestäminen on selvästi nopein vertailuun perustuvista järjestämisalgoritmeista ja ainoa vertailussa käytetyistä algoritmeista, joka toimii vakiotyötilassa (\engl{in place}).
 
 \section{Yhteenveto}
 
