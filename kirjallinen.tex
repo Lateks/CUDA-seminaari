@@ -246,10 +246,14 @@ Kiinnostus järjestämisverkkoihin perustuvia algoritmeja kohtaan on kasvanut vi
 
 Peters ja Schultz-Hildebrandt \cite{peters2012gems} esittelevät GPU Computing Gems -kirjassa CUDA-toteutuksen bitoniselle järjestämiselle. Koska mielivaltaisten säikeiden synkronointi ei ole mahdollista CUDAssa, toiminnot pyritään suorittamaan oikeassa järjestyksessä siten, että synkronointia vaativat toiminnot sijoitetaan eri CUDA-ytimiin, jotka suoritetaan peräkkäin. Kommunikaatio peräkkäin suoritettavien CUDA-ytimien välillä toteutetaan käyttämällä näytönohjaimen globaalia muistia tiedonvälitykseen. Petersin ja Schultz-Hildebrandtin toteutus pyrkii minimoimaan kommunikaation ja synkronoinnin tarpeen tarvittavien CUDA-ytimien ja globaaliin muistiin tehtävien viitteiden vähentämiseksi.
 
+Naiivi ratkaisu bitonisen järjestämisen rinnakkaistamiseen on luoda uusi säie jokaista yksittäistä vertailuoperaatiota varten. Tällöin vertailuoperaatioiden suorittaminen oikeassa järjestyksessä varmistetaan suorittamalla verkko yksi askel kerrallaan siten, että edellinen askel on aina kokonaan suoritettu ennen seuraavan alkamista. Jokainen askel suoritetaan omana CUDA-ytimenään ja jokaisen askeleen jälkeen muuttunut syöte kirjoitetaan globaaliin muistiin, josta seuraava CUDA-ydin voi sen lukea. Tällöin CUDA-ytimiä tarvitaan yhtä monta kuin askeliakin, eli $n = 2^k$ alkion syötteelle $\frac{k \cdot (k + 1)}{2}$ kappaletta, joista jokainen koostuu $\frac{2^k}{2} = 2^{k-1}$ säikeestä, joista jokainen hakee käyttämänsä alkiot globaalista muistista, käsittelee yhden vertailu- ja vaihto-operaation ja kirjoittaa alkiot takaisin muistiin.
+
+Naiivin ratkaisun keskeisin ongelma on globaaliin muistiin tehtävien viittausten suuri määrä, joka hidastaa algoritmin suoritusta. Koska jokainen askel suoritetaan erikseen, tarvitaan jokaisessa CUDA-ytimessä $n$ luku- ja kirjoitusoperaatiota globaaliin muistiin. Lisäksi viittaukset globaaliin muistiin ovat paikoin epäyhtenäisiä \cite{peters2012gems}.
+
 \begin{figure}
 \centering
 \includegraphics[scale = 0.8]{bitonic_divided}
-\caption{Yksinkertainen ratkaisu (vasemmalla) ja edistyneempi ratkaisu (oikealla).}
+\caption{Yksinkertainen ratkaisu vasemmalla ja edistyneempi ratkaisu oikealla.}
 \label{fig:bitonic_divided}
 \end{figure}
 
