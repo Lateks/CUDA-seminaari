@@ -11,6 +11,7 @@
 \usepackage{biblatex}
 \bibliography{lahteet}
 \newcommand{\engl}[1]{\foreignlanguage{english}{\em #1}}
+\hyphenation{jär-jes-tä-mis-al-go-rit-mi jär-jes-tä-mis-al-go-rit-me-ja jär-jes-tä-mis-al-go-rit-min}
 
 \begin{document}
 \title{Järjestämisalgoritmien suunnittelu grafiikkayksiköille}
@@ -219,16 +220,28 @@ Toisin kuin kantalukujärjestämisessä, lomitusjärjestämisen nopeus ei muutu 
 
 \subsection{Järjestämisverkot ja bitoninen järjestäminen}
 
-Bitoninen järjestäminen on Kevin Batcherin vuonna 1967 kehittämä järjestämisalgoritmi, joka perustuu järjestämisverkkoihin. Järjestämisverkko on abstrakti matemaattinen malli, joka muodostuu syötelangoista ja niitä yhdistävistä vertailumoduuleista (ks. kuva \ref{fig:sortingnetwork}). Järjestettävät syötteet ''liikkuvat'' syötelankoja pitkin vasemmalta oikealle. Kun syöteluvut pääsevät vertailumoduulin kohdalle, se vertaa lukuja toisiinsa ja tarvittaessa vaihtaa niiden paikkoja. Järjestämisverkon tekemien vertailuoperaatioiden määrä riippuu ainoastaan syötteen pituudesta, ei sisällöstä.
+Bitoninen järjestäminen (\engl{bitonic sort}) on Kevin Batcherin vuonna 1967 kehittämä järjestämisalgoritmi, joka perustuu järjestämisverkkoihin. Järjestämisverkko on abstrakti matemaattinen malli, joka muodostuu syötelangoista ja niitä yhdistävistä vertailumoduuleista. Järjestettävät syötteet ''liikkuvat'' syötelankoja pitkin vasemmalta oikealle. Kun syöteluvut pääsevät vertailumoduulin kohdalle, se vertaa lukuja toisiinsa ja tarvittaessa vaihtaa niiden paikkoja. Järjestämisverkon tekemien vertailuoperaatioiden määrä riippuu ainoastaan syötteen pituudesta, ei sisällöstä.
 
-Kiinnostus järjestämisverkkoihin perustuvia algoritmeja kohtaan on kasvanut viime aikoina, koska ne on erityisesti suunnattu rinnakkaisille arkkitehtuureille.
+%\begin{figure}
+%\centering
+%\includegraphics[scale = 0.45]{sortingnetwork}
+%\caption{Yksinkertainen järjestämisverkko, joka koostuu neljästä syötelangasta ja viidestä vertailijasta.}
+%\label{fig:sortingnetwork}
+%\end{figure}
+
+% Tähän bitonic sortin kuvaus.
 
 \begin{figure}
 \centering
-\includegraphics[scale = 0.45]{sortingnetwork}
-\caption{Yksinkertainen järjestämisverkko, joka koostuu neljästä syötelangasta ja viidestä vertailijasta.}
-\label{fig:sortingnetwork}
+\includegraphics[scale = 0.8]{bitonic}
+\caption{Bitoninen järjestämisverkko kahdeksalle alkiolle.}
+\label{fig:bitonicsort}
 \end{figure}
+
+Kiinnostus järjestämisverkkoihin perustuvia algoritmeja kohtaan on kasvanut viime aikoina, koska ne on erityisesti suunnattu rinnakkaisia arkkitehtuureja varten. Järjestämisverkkojen rinnakkainen toteutus vaatii tyypillisesti paljon rinnakkaisten prosessointiyksiköiden välistä synkronointia ja kommunikointia.
+
+Peters ja Schultz-Hildebrandt \cite{peters2012gems} esittelevät GPU Computing Gems -kirjassa CUDA-toteutuksen bitoniselle järjestämiselle. Koska mielivaltaisten säikeiden synkronointi ei ole mahdollista CUDAssa, toiminnot pyritään suorittamaan oikeassa järjestyksessä siten, että synkronointia vaativat toiminnot sijoitetaan eri CUDA-ytimiin, jotka suoritetaan peräkkäin. Kommunikaatio peräkkäin suoritettavien CUDA-ytimien välillä toteutetaan käyttämällä näytönohjaimen globaalia muistia tiedonvälitykseen. Petersin ja Schultz-Hildebrandtin toteutus pyrkii lisäksi minimoimaan kommunikaation ja synkronoinnin tarpeen tarvittavien CUDA-ytimien ja globaaliin muistiin tehtävien viitteiden vähentämiseksi.
+
 
 \section{Yhteenveto}
 
