@@ -231,6 +231,10 @@ Bitoninen järjestäminen (\engl{bitonic sort}) on Kevin Batcherin vuonna 1967 k
 
 % Tähän bitonic sortin kuvaus.
 
+Kuvassa \ref{fig:bitonicsort} on bitoninen järjestämisverkko kahdeksan alkion pituisille syötteille. Kuvassa numeroidut vaakaviivat ovat syötelankoja ja nuolet suunnattuja vertailu- ja vaihto-operaatioita. Vertailukohdissa nuolten molemmissa päissä olevia alkioita verrataan keskenään ja alkioista suurempi siirretään nuolenpään osoittamalle langalle.
+
+Yleisesti $n = 2^k$ alkion pituisen syötteen bitoninen järjestämisverkko koostuu $k$ kappaleesta vaiheita $1,...,k$. Jokainen vaihe $p \in 1,...,k$ puolestaan koostuu $p$ kappaleesta askeleita $p, p-1, ..., 1$. Yhteensä bitonisessa järjestämisverkossa on siis $\sum_{i = 1}^k i = \frac{k \cdot (k + 1)}{2}$ askelta, joista kussakin suoritetaan $\frac{n}{2}$ vertailu- ja vaihto-o\-pe\-raa\-ti\-o\-ta.
+
 \begin{figure}
 \centering
 \includegraphics[scale = 0.8]{bitonic}
@@ -238,7 +242,7 @@ Bitoninen järjestäminen (\engl{bitonic sort}) on Kevin Batcherin vuonna 1967 k
 \label{fig:bitonicsort}
 \end{figure}
 
-Kiinnostus järjestämisverkkoihin perustuvia algoritmeja kohtaan on kasvanut viime aikoina, koska ne on erityisesti suunnattu rinnakkaisia arkkitehtuureja varten. Järjestämisverkkojen rinnakkainen toteutus vaatii tyypillisesti paljon rinnakkaisten prosessointiyksiköiden välistä synkronointia ja kommunikointia.
+Kiinnostus järjestämisverkkoihin perustuvia algoritmeja kohtaan on kasvanut viime aikoina, koska ne on erityisesti suunnattu rinnakkaisia arkkitehtuureja varten. Rinnakkaistamisessa täytyy ottaa huomioon, että kun jokin vertailuoperaatio askeleessa $s$ alkaa käsitellä jotakin alkioparia, täytyy molempiin alkioihin kohdistuvien vertailuoperaatioiden olla suoritettu loppuun edellisessä askeleessa $s - 1$. Tämän vuoksi rinnakkainen toteutus vaatii tyypillisesti paljon rinnakkaisten prosessointiyksiköiden välistä synkronointia ja kommunikointia.
 
 Peters ja Schultz-Hildebrandt \cite{peters2012gems} esittelevät GPU Computing Gems -kirjassa CUDA-toteutuksen bitoniselle järjestämiselle. Koska mielivaltaisten säikeiden synkronointi ei ole mahdollista CUDAssa, toiminnot pyritään suorittamaan oikeassa järjestyksessä siten, että synkronointia vaativat toiminnot sijoitetaan eri CUDA-ytimiin, jotka suoritetaan peräkkäin. Kommunikaatio peräkkäin suoritettavien CUDA-ytimien välillä toteutetaan käyttämällä näytönohjaimen globaalia muistia tiedonvälitykseen. Petersin ja Schultz-Hildebrandtin toteutus pyrkii lisäksi minimoimaan kommunikaation ja synkronoinnin tarpeen tarvittavien CUDA-ytimien ja globaaliin muistiin tehtävien viitteiden vähentämiseksi.
 
