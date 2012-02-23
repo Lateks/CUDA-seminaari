@@ -194,6 +194,10 @@ Edistyneempi ratkaisu on kuvattu kuvassa \ref{fig:bitonic_divided} oikealla. Kol
 
 Pitempiä syötteitä käsiteltäessä voidaan ketjuttaa useampiakin askelia saman säikeen suoritettaviksi. Saman säikeen käsiteltäviksi annettavien askelten määrää rajoittaa kuitenkin säikeiden paikallisten rekisterien rajallinen määrä ja se, että näytönohjaimen tehokas hyödyntäminen edellyttää suurta määrää samanaikaisesti ajettavia säikeitä, joten säikeiden määrän ei haluta pienenevän merkittävästi \cite{peters2012gems}.
 
+Rekisterien rajallisuus ei olisi ongelma, jos yksittäisten säikeiden sijaan käytettäisiin säielohkoja, jolloin säikeet voisivat käyttää paikallista jaettua muistia, joka on huomattavasti suurempi kuin säikeiden paikallinen rekisteritila. Tällöin kuitenkin ongelmaksi nousee se, että saman säielohkon käsiteltäviksi tulevat alkiot sijaitsevat harvoin peräkkäin muistissa, joten muistiin tehtävien viitteiden yhdistäminen ei ole mahdollista, mikä taas hidastaa suoritusta.
+
+Jaettua muistia ja säielohkoja kuitenkin pystytään käyttämään hyödyksi toisella tavalla. Kun syötteenä saatavan avainjonon koko on $2^k$, kunkin vaiheen askeleissa $s, s-1, ..., 1$ käsitellään itsenäisesti $2^{k-s}$ kappaletta $2^s$ alkion alijonoja, jotka sijaitsevat peräkkäin muistissa. Jos tällainen $2^s$ alkion alijono mahtuu kokonaan säielohkon jaettuun muistiin, se voidaan siirtää globaalista muistista jaettuun muistiin yhdellä yhdistetyllä lukuoperaatiolla ja jakaa säielohkon sisällä vertailuoperaatiot säikeiden kesken edellä kuvatulla tavalla, mutta käyttäen rekisterien sijaan säielohkon jaettua paikallista muistia ja useiden CUDA-ytimien käynnistämisen sijaan lohkojen sisäistä synkronointia.
+
 \section{Yhteenveto}
 
 ...
