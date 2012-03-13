@@ -2,6 +2,7 @@
 \usepackage[top = 1.5 in, bottom = 1 in, left = 1.5 in, right = 1.5 in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{csquotes}
 \usepackage[british, finnish]{babel}
 \usepackage{lmodern}
 \usepackage{url}
@@ -30,7 +31,7 @@
 
 Järjestäminen on yksi tunnetuimmista ja tutkituimmista laskennallisista ongelmista. Järjestämisalgoritmit ovat keskeisiä rakennuspalikoita esimerkiksi tietokantajärjestelmissä, hakumoottoreissa, tietokonegrafiikassa ja maantieteellistä dataa käsittelevissä järjestelmissä, joissa kohteita järjestetetään spatiaalisesti. Tästä johtuen tehokkaita järjestämisalgoritmeja tarvitaan kaikilla ohjelmointialustoilla, ja uusien arkkitehtuurien tarjoamia rinnakkaistamismahdollisuuksia on tarpeen käyttää hyödyksi.
 
-Prosessorien ytimien määrä on jo pitkään ollut kasvussa. Neliytimiset suorittimet ovat jo nykyään tavallisia, ja tulevaisuudessa kehitys näyttää menevän yhä vahvemmin ns. massiivimoniytimisten prosessorien (\engl{manycore processor}) suuntaan. Lisäksi ytimet kykenevät usein useamman säikeen suorittamiseen yhtäaikaisesti. Grafiikkayksiköissä massiivinen ytimien määrä on jo saavutettu: esimerkiksi nykyisissä Nvidian valmistamissa grafiikkayksiköissä ytimiä on jopa 448 kappaletta (Nvidia Tesla C2050/ C2070/C2075) \cite{nvidiafermi2010}.
+Prosessorien ytimien määrä on jo pitkään ollut kasvussa. Neliytimiset suorittimet ovat jo nykyään tavallisia, ja tulevaisuudessa kehitys näyttää menevän yhä vahvemmin ns. massiivimoniytimisten prosessorien (\engl{manycore processor}) suuntaan. Lisäksi ytimet kykenevät usein useamman säikeen suorittamiseen yhtäaikaisesti. Grafiikkayksiköissä massiivinen ytimien määrä on jo saavutettu.
 
 Ytimien määrän lisäksi grafiikkayksiköiden ohjelmoinnissa täytyy ottaa huomioon, että ulkoiseen muistiin viittaaminen on hidasta, ja grafiikkapiirillä olevaa nopeaa muistia on rajallinen määrä \cite{leischner2010}. Täten muistissakäynnit on syytä suunnitella siten, että grafiikkayksikkö pystyy yhdistämään joukon muistiviittauksia yhdeksi viittaukseksi suurempaan muistialueeseen.
 
@@ -58,9 +59,9 @@ Loimeen kuuluvat säikeet suoritetaan siten, että jokainen säie suorittaa sama
 
 Suorituksen aikana data pidetään globaalissa muistissa, mutta siihen viittaaminen on melko hidasta. Kullakin moniprosessorilla on näytönohjainmallista riippuva määrä nopeaa paikallista muistia --- esimerkiksi Tesla C1060-näytönohjaimella 16 kilotavua moniprosessoria kohti. Laskennan aikana kannattaa siis käyttää paikallista jaettua muistia datan väliaikaiseen säilytykseen, koska viittauksia muistiin tulee paljon \cite{leischner2010}. Laskennan loputtua käsitelty data voidaan kopioida takaisin globaaliin muistiin.
 
-Säikeet voivat periaatteessa viitata mihin tahansa kohtaan muistia, mutta muistiviittaukset kannattaa tehdä siten, että samaan loimeen kuuluvat säikeet viittaavat peräkkäisiin muistiosoitteisiin. Tällöin muistiviitteet voidaan muuntaa yhdeksi suureksi luku- tai kirjoitusoperaatioksi \cite{satish2009}. Paikallista jaettua muistia käytettäessä säikeiden kannattaa viitata eri muistipaikkoihin, koska muutoin luku- ja kirjoitusoperaatiot samaan muistipaikkaan suoritetaan sarjallisesti. Toisaalta jos kaikki säikeet viittaavat samaan muistipaikkaan, tulee muistiviitteestä taas yhtä nopea kuin yksittäisestä lukuoperaatiosta \cite{cederman2009}.
+Säikeet voivat periaatteessa viitata mihin tahansa kohtaan muistia, mutta muistiviittaukset kannattaa tehdä siten, että samaan loimeen kuuluvat säikeet viittaavat peräkkäisiin muistiosoitteisiin. Tällöin muistiviitteet voidaan muuntaa yhdeksi suureksi luku- tai kirjoitusoperaatioksi \cite{satish2009}. Paikallista jaettua muistia käytettäessä säikeiden kannattaa yleensä viitata eri muistipaikkoihin, koska muutoin luku- ja kirjoitusoperaatiot samaan muistipaikkaan suoritetaan sarjallisesti. Poikkeuksena on tapaus, jossa kaikki säikeet viittaavat samaan muistipaikkaan, jolloin muistiviitteestä tulee taas yhtä nopea kuin yksittäisestä lukuoperaatiosta optimoinnin ansiosta \cite{cederman2009}.
 
-Kolonias ja kumppanit \cite{kolonias2011} huomauttavat lisäksi, että datan siirtäminen CPU:n ja CUDA-laitteiden välillä on usein niin hidasta, että mikäli osa laskennasta tehdään jo valmiiksi CPU:lla, voi järjestäminenkin olla tehokkaampaa suorittaa siellä ulkoisen CUDA-laitteen käyttämisen sijasta. Toisaalta CUDA Toolkitin versiosta 2.2 lähtien ohjelmoijan on mahdollista allokoida isäntäjärjestelmästä muistia, johon CUDA-ytimillä on suora pääsy \cite{kolonias2011}. Tällöin siirtäminen isäntäjärjestelmän ja näytönohjaimen välillä nopeutuu huomattavasti.
+Kolonias ja kumppanit \cite{kolonias2011} huomauttavat lisäksi, että datan siirtäminen CPU:n ja CUDA-laitteiden välillä on usein niin hidasta, että mikäli osa laskennasta tehdään jo valmiiksi CPU:lla, voi järjestäminenkin olla tehokkaampaa suorittaa siellä ulkoisen CUDA-laitteen käyttämisen sijasta. Toisaalta CUDA Toolkitin versiosta 2.2 lähtien ohjelmoijan on mahdollista allokoida isäntäjärjestelmästä muistia, johon CUDA-ytimillä on suora pääsy DMA-tekniikkaa käyttäen \cite{kolonias2011}. Tällöin siirtäminen isäntäjärjestelmän ja näytönohjaimen välillä nopeutuu huomattavasti.
 
 \section{Järjestämisalgoritmit CUDA-ympäristölle}
 
@@ -120,11 +121,11 @@ Satish ja kumppanit \cite{satish2009} ovat esitelleet myös yhden tehokkaimmista
 \begin{enumerate}
 \item Syötetaulukko jaetaan $p = \lceil n/1024 \rceil$ osaan kuten kantalukujärjestämisessä.
 \item Osiot järjestetään $p$ kappaleessa rinnakkaisia säielohkoja.
-\item Järjestetyt lohkot lomitetaan rinnakkaistetusti käyttäen parittaista $\log(p)$-syvyistä lomituspuuta.
+\item Järjestetyt osiot lomitetaan rinnakkaistetusti käyttäen parittaista $\log(p)$-syvyistä lomituspuuta.
 \end{enumerate}
 \end{singlespace*}
 
-Vaiheessa (2) järjestämiseen käytetään Batcherin järjestämisverkkoihin perustuvaa \engl{odd-even merge sort} -algoritmia, josta on valmiita tehokkaita toteutuksia näytönohjaimille. Algoritmi perustuu siihen, että parilliset ja parittomat avaimet järjestetään erillisinä joukkoina ja lopuksi lomitetaan keskenään. Satishin ja kumppanien lähestymistavassa parilliset ja parittomat avaimet lajitellaan eri säielohkoissa.
+Vaiheessa (2) järjestämiseen käytetään Batcherin järjestämisverkkoihin perustuvaa \engl{odd-even merge sort} -algoritmia, josta on valmiita tehokkaita toteutuksia näytönohjaimille. Algoritmi perustuu siihen, että parilliset ja parittomat avaimet järjestetään erillisinä joukkoina ja lopuksi lomitetaan keskenään.
 
 Valtaosa työstä tehdään lomitusvaiheessa. Jokaisella lomituspuun tasolla lomitetaan vaiheen (2) tuottamat järjestetyt lohkot parittomia ja parillisia avaimia keskenään pareittain. Koska lomitettavien parien määrä pienenee geometrisesti jokaisella lomituspuun tasolla, täytyy lomitusalgoritmia tehostaa. Satish ja kumppanit tekevät tämän käyttämällä hajota ja hallitse -tekniikkaa myös lomituspuun eri tasoilla, jolloin rinnakkaisuutta pystytään hyödyntämään myös parien vähentyessä \cite{satish2009}.
 
@@ -202,7 +203,9 @@ Vertailuissa sekä 32- että 64-bittisillä avaimilla avaimilla Petersin ja Schu
 
 \section{Yhteenveto}
 
-...
+Tässä työssä esittelin lyhyesti CUDA-arkkitehtuurin keskeiset ominaisuudet, joitakin yleisiä lähinnä muistinkäyttöön liittyviä optimointitekniikoita sekä kolmen erilaisen järjestämisalgoritmin toteutukset CUDA-ympäristölle. CUDA-ark\-ki\-teh\-tuu\-ril\-le suunnitellut järjestämisalgoritmit poikkeavat perinteisemmistä moniydinarkkitehtuurien järjestämisalgoritmeista siinä, että CUDAlla samoja operaatioita suoritetaan samanaikaisesti eri osioille datasta, kun taas perinteisillä moniydinarkkitehtuureilla suoritetaan eri operaatioita samanaikaisesti samalle datalle. Resurssienkäytön optimointi edellyttää tämän vuoksi datan jakamisen ja operaatioiden rinnakkaistamisen huolellista suunnittelua.
+
+Nopeat CUDA-järjestämisalgoritmit perustuvat usein jonkin valmiin tehokkaan primitiivin kuten rinnakkaisen prefiksisummaoperaation (\engl{scan}) nokkelaan hyödyntämiseen. Erityisen lupaavilta vaikuttavat järjestämisverkkoihin perustuvat algoritmit, jotka on erityisesti suunniteltu rinnakkaisille arkkitehtuureille.
 
 \printbibliography
 
