@@ -39,9 +39,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.9403906"
+     inkscape:zoom="7.0868008"
      inkscape:cx="162.3349"
-     inkscape:cy="234.16248"
+     inkscape:cy="28.15832"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="true"
@@ -135,7 +135,7 @@
        rx="0.088888891"
        ry="0.11071428" />
     <rect
-       style="fill:#bc5fd3;fill-opacity:1;stroke:#8787de;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:4, 4;stroke-dashoffset:0"
+       style="fill:#bc5fd3;fill-opacity:1;stroke:#bc5fd3;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect4031"
        width="20"
        height="60"
