@@ -260,4 +260,96 @@
     \end{itemize}
 \end{frame}
 
+\section{Kantalukujärjestäminen}
+
+\begin{frame}{Radix sort eli kantalukujärjestäminen}{Yleistä}
+    \begin{itemize}
+      \item
+        Tyypillisesti kokonaislukuavainten järjestämiseen käytetty algoritmi.
+      \item
+        Ei perustu avainten vertailuihin sinänsä, vaan kokonaislukuavaimen bittiesityksen käsittelyyn.
+      %\item
+        %Kun avainten pituus on vakio $d$, avaimet käydään läpi $d$ kertaa: yksi avaimen numero (tai esimerkiksi bitti) kerrallaan alkaen vähiten merkittävästä numerosta.
+      %\item
+        %Jokaisella läpikäynnillä avaimet järjestetään kulloinkin käsittelyssä olevan numeron perusteella.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Radix sort}{Esimerkki}
+\begin{exampleblock}{Avainten järjestäminen}
+Jokaisessa läpikäynnissä avaimet järjestetään käyttäen jotakin vakaata järjestämisalgoritmia.
+\begin{figure}
+    \includegraphics[scale=0.75]{radix_stable.pdf}
+\end{figure}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Radix sort}{Toteutus (Satish et al.)}
+    \begin{itemize}
+      \item
+        Läpikäynneissä käytetään laskentajärjestämistä (counting sort).
+    \end{itemize}
+\begin{exampleblock}{Esimerkki}
+Avaimet: [1, 0, 2, 0, 0, 1, 0, 2, 2, 1] \\
+Histogrammitaulukko: [4, 3, 3] \\
+Prefiksisumma: [4, 7, 10] \\
+\end{exampleblock}
+Prefiksisumman perusteella tuotetaan taulukko, jossa avain 0 indekseissä 0--3, avain 1 indekseissä 4--6, ja avain 2 indekseissä 7--9.
+\end{frame}
+
+\begin{frame}{Radix sort}{Toteutus (Satish et al.)}
+\begin{itemize}
+    \item
+      Kantaluvuksi valitaan jokin $2^b$ ($b > 1$), jolloin avainten ''numerot'' ovat $b$ bitin jonoja.
+    \item
+      ''Numeroiksi'' voitaisiin valita myös yksittäiset bitit ($b = 1$), mutta tällöin iteraatioita tarvittaisiin enemmän. \\ $\Rightarrow$ Muistiviitteiden määrä kasvaa, koska jokaisen järjestämiskierroksen jälkeen joudutaan kirjoittamaan dataa muistiin.
+    \item
+      Toisaalta $b$ ei voi myöskään olla liian suuri, koska tällöin mahdollisten numeron arvojen määrä kasvaa. Tällöin järjestämiskierrosten jälkeen tehtävistä muistiviitteistä tulee hajanaisempia.
+    \item
+      Optimoinnin tuloksena valitaan $b = 4$, jolloin kantaluku on 16.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Radix sort}{Läpikäynnin vaiheet (Satish et al.)}
+Data jaetaan 1024 alkion joukkoihin, joista kutakin järjestämään luodaan 256 säikeen lohko.
+\begin{enumerate}
+  \item
+    Kukin säielohko järjestää avaimensa paikallisessa nopeassa muistissa. Ilmeisesti sisäisesti laskentajärjestäminen käy numeron bitit yksitellen läpi.
+  \item
+    Säielohko kirjoittaa numeroiden esiintymähistogrammin ja järjestetyn datan globaaliin muistiin.
+  \item
+    Kaikkien säielohkojen tuottamista esiintymähistogrammeista lasketaan prefiksisumma.
+  \item
+    Kukin säielohko kopioi alkionsa prefiksisummalla laskettujen indeksien osoittamiin muistiosoitteisiin.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Radix sort}{Histogrammien prefiksisumma}
+\begin{figure}
+    \includegraphics[scale=0.4]{prefixsum.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Radix sort}{Yhteenveto}
+\begin{itemize}
+    \item
+      Satishin ja kumppanien toteutus järjestää 32-bittisiä avain-arvo-pareja parhaimmillaan lähes 150 miljoonaa kappaletta sekunnissa.
+    \item
+      Huomattavasti nopeampi on esim. Merrillin ja Grimshawn uudempi, optimoidumpi toteutus, joka suoriutuu noin 500 miljoonan avain-arvo-parin lajittelusta sekunnissa. Se on siis myös huomattavasti aiemmin esiteltyä bitonista järjestämistä nopeampi.
+    \item
+      Algoritmi on kuitenkin käyttötarkoituksiltaan rajoittunut, koska avainten on oltava sellaisia, että ne voi järjestää niiden bittiesityksen perusteella.
+\end{itemize}
+\end{frame}
+
+\section{Yhteenveto}
+
+\begin{frame}{Yhteenveto}{}
+    \begin{itemize}
+        \item Keskeisenä ongelmana järjestettävän datan jakaminen prosessointiyksiköiden kesken.
+        \item Muistinkäytön optimointi tärkeää.
+        \item Tehokkaimpia algoritmitoteutuksia tällä hetkellä ilmeisesti radix sort ja bitoninen järjestäminen.
+        \item Yleisesti järjestämisverkkoihin perustuvat algoritmit kiinnostavia, koska ne on suunniteltu rinnakkaisia arkkitehtuureja varten.
+    \end{itemize}
+\end{frame}
+
 \end{document}
