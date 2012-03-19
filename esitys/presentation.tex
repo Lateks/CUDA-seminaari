@@ -265,7 +265,7 @@
 \begin{frame}{Radix sort eli kantalukujärjestäminen}{Yleistä}
     \begin{itemize}
       \item
-        Tyypillisesti kokonaislukuavainten järjestämiseen käytetty algoritmi.
+        Tyypillisesti pienehköjen kokonaislukuavainten järjestämiseen käytetty algoritmi.
       \item
         Ei perustu avainten vertailuihin sinänsä, vaan kokonaislukuavaimen bittiesityksen käsittelyyn.
       %\item
@@ -312,21 +312,29 @@ Prefiksisumman perusteella tuotetaan taulukko, jossa avain 0 indekseissä 0--3, 
 
 \begin{frame}{Radix sort}{Läpikäynnin vaiheet (Satish et al.)}
 Data jaetaan 1024 alkion joukkoihin, joista kutakin järjestämään luodaan 256 säikeen lohko.
-\begin{enumerate}
+\begin{itemize}
   \item
     Kukin säielohko järjestää avaimensa paikallisessa nopeassa muistissa. Ilmeisesti sisäisesti laskentajärjestäminen käy numeron bitit yksitellen läpi.
+    \begin{itemize}
+      \item
+        Datan esijärjestäminen.
+      \item
+        Esiintymähistogrammi.
+    \end{itemize}
   \item
     Säielohko kirjoittaa numeroiden esiintymähistogrammin ja järjestetyn datan globaaliin muistiin.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Radix sort}{Läpikäynnin vaiheet (Satish et al.)}
+\begin{itemize}
   \item
     Kaikkien säielohkojen tuottamista esiintymähistogrammeista lasketaan prefiksisumma.
   \item
     Kukin säielohko kopioi alkionsa prefiksisummalla laskettujen indeksien osoittamiin muistiosoitteisiin.
-\end{enumerate}
-\end{frame}
-
-\begin{frame}{Radix sort}{Histogrammien prefiksisumma}
+\end{itemize}
 \begin{figure}
-    \includegraphics[scale=0.4]{prefixsum.png}
+    \includegraphics[scale=0.3]{prefixsum.png}
 \end{figure}
 \end{frame}
 
